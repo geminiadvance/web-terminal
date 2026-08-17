@@ -1,28 +1,28 @@
 FROM debian:bookworm-slim
 
-# Prevent interactive prompts during apt installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install ttyd and common utilities
+# Install dependencies, ca-certificates, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ttyd \
-    bash \
+    ca-certificates \
     curl \
     wget \
     git \
     vim \
     nano \
     sudo \
+    bash \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Download pre-built ttyd binary directly from GitHub
+RUN curl -sLO https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64 \
+    && chmod +x ttyd.x86_64 \
+    && mv ttyd.x86_64 /usr/local/bin/ttyd
+
 WORKDIR /root
 
-# Enable color terminal support
 ENV TERM=xterm-256color
 
-# Expose port for Render
 EXPOSE 10000
 
-# Launch ttyd on port 10000 with interactive bash
 CMD ["ttyd", "-p", "10000", "-W", "bash"]
