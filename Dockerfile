@@ -2,12 +2,12 @@ FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Enable manual pages extraction by removing dpkg exclusions
+# 1. Clear dpkg path-exclusions to allow man page installation
 RUN rm -f /etc/dpkg/dpkg.cfg.d/excludes \
     && sed -i '/path-exclude=\/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/* 2>/dev/null || true
 
-# 2. Install man-db, less (pager required by man), and common Linux tools
-RUN apt-get update && apt-get install -y \
+# 2. Update indices and install man-db, less (pager), and core tools
+RUN apt-get update && apt-get install -y --reinstall \
     ca-certificates \
     curl \
     wget \
@@ -17,12 +17,6 @@ RUN apt-get update && apt-get install -y \
     sudo \
     bash \
     less \
-    procps \
-    htop \
-    tree \
-    zip \
-    unzip \
-    python3 \
     util-linux \
     bsdmainutils \
     man-db \
@@ -31,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     coreutils \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Force man-db database creation
+# 3. Explicitly build the manual page index
 RUN mandb -c
 
 # 4. Install ttyd web terminal
@@ -41,11 +35,9 @@ RUN curl -sLO https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_6
 
 WORKDIR /root
 
-# Configure environment variables for colored output and pager support
 ENV TERM=xterm-256color
 ENV PAGER=less
 
 EXPOSE 10000
 
-# Secured entrypoint using environment variables from Render
 CMD ttyd -p 10000 -c "$TTYD_USER:$TTYD_PASS" -W bash
