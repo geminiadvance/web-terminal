@@ -2,12 +2,12 @@ FROM debian:bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Clear dpkg path-exclusions to allow man page installation
+# 1. Clear dpkg path-exclusions for man pages
 RUN rm -f /etc/dpkg/dpkg.cfg.d/excludes \
     && sed -i '/path-exclude=\/usr\/share\/man/d' /etc/dpkg/dpkg.cfg.d/* 2>/dev/null || true
 
-# 2. Update indices and install man-db, less (pager), and core tools
-RUN apt-get update && apt-get install -y --reinstall \
+# 2. Install gcc compiler suite, man-db, less, and core tools
+RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     wget \
@@ -17,6 +17,13 @@ RUN apt-get update && apt-get install -y --reinstall \
     sudo \
     bash \
     less \
+    procps \
+    htop \
+    tree \
+    zip \
+    unzip \
+    python3 \
+    build-essential \
     util-linux \
     bsdmainutils \
     man-db \
@@ -25,7 +32,7 @@ RUN apt-get update && apt-get install -y --reinstall \
     coreutils \
     && rm -rf /var/lib/apt/lists/*
 
-# 3. Explicitly build the manual page index
+# 3. Build man page database
 RUN mandb -c
 
 # 4. Install ttyd web terminal
@@ -40,4 +47,5 @@ ENV PAGER=less
 
 EXPOSE 10000
 
-CMD ttyd -p 10000 -c "$TTYD_USER:$TTYD_PASS" -W bash
+# Launch ttyd WITHOUT password flag (-c)
+CMD ["ttyd", "-p", "10000", "-W", "bash"]
